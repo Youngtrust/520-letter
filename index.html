@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 
@@ -61,10 +62,21 @@
             opacity: 0;
             transition: opacity 2s;
         }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            z-index: 999;
+        }
     </style>
 </head>
 
 <body>
+    <div id="loading">加载中，请稍候...</div>
     <canvas id="fireworkCanvas"></canvas>
     <div id="progressContainer">
         <div id="progressBar"></div>
@@ -88,7 +100,7 @@
         let fireworks = [];
         let showHeart = false;
         let showMessage = false;
-        let startTime = Date.now();
+        let startTime;
         const totalDuration = 7000;
 
         function updateProgress() {
@@ -164,7 +176,6 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-
             ctx.fillStyle = "rgba(0, 0, 0, 0.03)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -212,11 +223,6 @@
             }
         }
 
-        animate();
-        setTimeout(() => {
-            document.getElementById("bgMusic").play();
-        }, 2000);
-
         const music = document.getElementById('bgMusic');
         let musicUnlocked = false;
 
@@ -231,17 +237,26 @@
             }
         }
 
-        // 解锁音乐播放权限：任何点击即可触发
         window.addEventListener('click', () => {
             if (!musicUnlocked) {
                 music.play().then(() => {
                     musicUnlocked = true;
-                }).catch(() => {
-                    // 被阻止也没关系
-                });
+                }).catch(() => {});
             }
         }, { once: true });
+
+        // 启动动画仅在图片加载完后进行
+        bgImage.onload = () => {
+            document.getElementById("loading").style.display = "none";
+            startTime = Date.now();
+            animate();
+            setTimeout(() => {
+                if (!musicUnlocked) {
+                    music.play().catch(() => {});
+                    musicUnlocked = true;
+                }
+            }, 2000);
+        };
     </script>
 </body>
-
 </html>
